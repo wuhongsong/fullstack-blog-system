@@ -159,11 +159,35 @@ app.delete('/api/posts/:id', (req, res) => {
   res.json({ message: '文章已删除' });
 });
 
-// 健康检查
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: '博客API服务正常运行' });
+// 根路径
+app.get('/', (req, res) => {
+  res.json({ 
+    message: '博客系统API服务器',
+    version: '1.0.0',
+    endpoints: [
+      'GET /api/posts - 获取所有文章',
+      'GET /api/posts/:id - 获取单篇文章',
+      'POST /api/posts - 创建新文章',
+      'PUT /api/posts/:id - 更新文章',
+      'DELETE /api/posts/:id - 删除文章',
+      'GET /api/health - 健康检查'
+    ]
+  });
 });
 
-app.listen(PORT, () => {
+// 健康检查
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: '博客API服务正常运行',
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`服务器运行在端口 ${PORT}`);
+  console.log(`环境: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`允许的源: ${process.env.ALLOWED_ORIGINS || 'http://localhost:3000'}`);
 });
