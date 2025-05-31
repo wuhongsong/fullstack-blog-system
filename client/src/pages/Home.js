@@ -147,11 +147,9 @@ const Home = () => {
             <p>点击上方按钮选择您的重要照片，它将永久保存！</p>
           </div>
         )}
-      </div>
-
-      {/* 博客标题和操作区域 */}
+      </div>      {/* 博客标题和操作区域 */}
       <div className="home-header">
-        <h1>我的博客</h1>
+        <h1>根娟一起跳</h1>
         <Link to="/create" className="create-post-btn">
           📝 写新文章
         </Link>

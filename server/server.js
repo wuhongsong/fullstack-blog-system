@@ -66,12 +66,11 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // 初始化数据文件
-if (!fs.existsSync(dataFile)) {
-  const initialData = {
+if (!fs.existsSync(dataFile)) {  const initialData = {
     posts: [
       {
         id: uuidv4(),
-        title: "欢迎来到我的博客",
+        title: "欢迎来到根娟一起跳",
         content: "这是一篇示例文章。您可以创建、编辑和删除文章。",
         author: "博主",
         createdAt: new Date().toISOString(),

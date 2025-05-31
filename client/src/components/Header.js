@@ -5,10 +5,9 @@ const Header = () => {
   const location = useLocation();
 
   return (
-    <header className="header">
-      <div className="container">
+    <header className="header">      <div className="container">
         <nav className="nav">
-          <h1>我的博客</h1>
+          <h1>根娟一起跳</h1>
           <div className="nav-links">
             <Link 
               to="/" 
