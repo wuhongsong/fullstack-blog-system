@@ -111,4 +111,34 @@ export const postService = {
   },
 };
 
+// 照片相关 API
+export const photoService = {
+  // 上传照片
+  async uploadPhoto(photoData, fileName) {
+    const response = await api.post('/upload-photo', {
+      photoData,
+      fileName
+    });
+    return response.data;
+  },
+
+  // 获取所有照片
+  async getAllPhotos() {
+    const response = await api.get('/photos');
+    return response.data;
+  },
+
+  // 获取最新照片
+  async getLatestPhoto() {
+    const response = await api.get('/latest-photo');
+    return response.data;
+  },
+
+  // 删除照片
+  async deletePhoto(photoId) {
+    const response = await api.delete(`/photos/${photoId}`);
+    return response.data;
+  }
+};
+
 export default api;

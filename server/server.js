@@ -187,6 +187,99 @@ app.delete('/api/posts/:id', (req, res) => {
   res.json({ message: '文章已删除' });
 });
 
+// 照片相关 API
+
+// 上传照片
+app.post('/api/upload-photo', (req, res) => {
+  try {
+    const { photoData, fileName } = req.body;
+    
+    if (!photoData) {
+      return res.status(400).json({ message: '照片数据不能为空' });
+    }
+    
+    const data = readData();
+    
+    // 确保photos数组存在
+    if (!data.photos) {
+      data.photos = [];
+    }
+    
+    // 添加新照片（保留最近的5张）
+    const newPhoto = {
+      id: uuidv4(),
+      fileName: fileName || '重要照片',
+      photoData,
+      uploadTime: new Date().toISOString()
+    };
+    
+    data.photos.unshift(newPhoto);
+    
+    // 只保留最近的5张照片
+    if (data.photos.length > 5) {
+      data.photos = data.photos.slice(0, 5);
+    }
+    
+    writeData(data);
+    
+    res.json({
+      message: '照片上传成功',
+      photo: newPhoto
+    });
+  } catch (error) {
+    console.error('照片上传错误:', error);
+    res.status(500).json({ message: '照片上传失败' });
+  }
+});
+
+// 获取所有照片
+app.get('/api/photos', (req, res) => {
+  try {
+    const data = readData();
+    res.json(data.photos || []);
+  } catch (error) {
+    console.error('获取照片错误:', error);
+    res.status(500).json({ message: '获取照片失败' });
+  }
+});
+
+// 获取最新照片（用于首页显示）
+app.get('/api/latest-photo', (req, res) => {
+  try {
+    const data = readData();
+    const latestPhoto = data.photos && data.photos.length > 0 ? data.photos[0] : null;
+    res.json(latestPhoto);
+  } catch (error) {
+    console.error('获取最新照片错误:', error);
+    res.status(500).json({ message: '获取最新照片失败' });
+  }
+});
+
+// 删除照片
+app.delete('/api/photos/:id', (req, res) => {
+  try {
+    const data = readData();
+    
+    if (!data.photos) {
+      return res.status(404).json({ message: '照片未找到' });
+    }
+    
+    const photoIndex = data.photos.findIndex(p => p.id === req.params.id);
+    
+    if (photoIndex === -1) {
+      return res.status(404).json({ message: '照片未找到' });
+    }
+    
+    data.photos.splice(photoIndex, 1);
+    writeData(data);
+    
+    res.json({ message: '照片已删除' });
+  } catch (error) {
+    console.error('删除照片错误:', error);
+    res.status(500).json({ message: '删除照片失败' });
+  }
+});
+
 // 根路径
 app.get('/', (req, res) => {
   res.json({ 
