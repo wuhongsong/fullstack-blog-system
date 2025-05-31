@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>博客系统部署测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-item { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .pending { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { margin: 5px; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>博客系统部署连接测试</h1>
+    
+    <h2>🔗 测试链接</h2>
+    
+    <div class="test-item">
+        <h3>后端API测试</h3>
+        <button onclick="testAPI()">测试API连接</button>
+        <div id="api-result">等待测试...</div>
+    </div>
+    
+    <div class="test-item">
+        <h3>前端URL测试</h3>
+        <p>点击下面的链接测试前端部署：</p>
+        <button onclick="testURL('https://fullstack-blog-system.vercel.app')">测试 fullstack-blog-system.vercel.app</button><br>
+        <button onclick="testURL('https://fullstack-blog-system-wuhongsongs-projects.vercel.app')">测试 wuhongsongs-projects 版本</button><br>
+        <button onclick="testURL('https://fullstack-blog-system-git-main-wuhongsongs-projects.vercel.app')">测试 git-main 版本</button><br>
+        <div id="url-results"></div>
+    </div>
+    
+    <div class="test-item">
+        <h3>🔄 CORS测试</h3>
+        <button onclick="testCORS()">测试跨域请求</button>
+        <div id="cors-result">等待测试...</div>
+    </div>
+    
+    <script>
+        async function testAPI() {
+            const apiUrl = 'https://whs-fullstack-blog-system.onrender.com/api/posts';
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.className = 'pending';
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                const response = await fetch(apiUrl);
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ API连接成功！<br>状态码: ${response.status}<br>文章数量: ${data.length}`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `❌ API连接失败<br>状态码: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ 网络错误: ${error.message}`;
+            }
+        }
+        
+        function testURL(url) {
+            window.open(url, '_blank');
+        }
+        
+        async function testCORS() {
+            const apiUrl = 'https://whs-fullstack-blog-system.onrender.com/api/posts';
+            const resultDiv = document.getElementById('cors-result');
+            resultDiv.className = 'pending';
+            resultDiv.innerHTML = '测试CORS...';
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin
+                    }
+                });
+                
+                const corsHeaders = response.headers.get('Access-Control-Allow-Origin');
+                
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ CORS测试成功！<br>允许的源: ${corsHeaders || '所有源'}`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `❌ CORS测试失败<br>状态码: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ CORS错误: ${error.message}`;
+            }
+        }
+        
+        // 页面加载时自动测试API
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

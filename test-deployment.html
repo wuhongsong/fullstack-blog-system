@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>部署测试</title>
+</head>
+<body>
+    <h1>博客系统部署测试</h1>
+    <div id="result"></div>
+    
+    <script>
+        // 测试API连接
+        async function testAPI() {
+            const apiUrl = 'https://whs-fullstack-blog-system.onrender.com/api/posts';
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                console.log('测试API URL:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('响应状态:', response.status);
+                console.log('响应头:', response.headers);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h2>✅ API连接成功</h2>
+                        <p>状态码: ${response.status}</p>
+                        <p>文章数量: ${data.length}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h2>❌ API连接失败</h2>
+                        <p>状态码: ${response.status}</p>
+                        <p>错误: ${response.statusText}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('请求错误:', error);
+                resultDiv.innerHTML = `
+                    <h2>❌ 网络错误</h2>
+                    <p>错误信息: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // 页面加载后自动测试
+        window.onload = testAPI;
+    </script>
+</body>
+</html>
