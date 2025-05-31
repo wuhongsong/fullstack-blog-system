@@ -6,12 +6,50 @@ const API_BASE_URL = process.env.REACT_APP_API_URL ||
     ? 'https://whs-fullstack-blog-system.onrender.com/api' 
     : 'http://localhost:5000/api');
 
+console.log('API Base URL:', API_BASE_URL);
+console.log('Environment:', process.env.NODE_ENV);
+console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10秒超时
 });
+
+// 添加请求拦截器
+api.interceptors.request.use(
+  (config) => {
+    console.log('发送API请求:', config.method?.toUpperCase(), config.url);
+    console.log('完整URL:', `${config.baseURL}${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('请求拦截器错误:', error);
+    return Promise.reject(error);
+  }
+);
+
+// 添加响应拦截器
+api.interceptors.response.use(
+  (response) => {
+    console.log('API响应成功:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('API响应错误:', error);
+    if (error.response) {
+      console.error('错误状态码:', error.response.status);
+      console.error('错误数据:', error.response.data);
+    } else if (error.request) {
+      console.error('网络错误，无法连接到服务器');
+    } else {
+      console.error('请求配置错误:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const postService = {
   // 获取所有文章

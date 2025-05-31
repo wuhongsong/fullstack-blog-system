@@ -10,12 +10,26 @@ const PORT = process.env.PORT || 5000;
 // CORS配置 - 支持部署环境
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:3000'];
+  : [
+    'http://localhost:3000',
+    'https://fullstack-blog-system.vercel.app',
+    'https://fullstack-blog-system-git-main-wuhongsongs-projects.vercel.app',
+    'https://fullstack-blog-system-wuhongsongs-projects.vercel.app',
+    // 添加更多可能的Vercel域名模式
+    'https://fullstack-blog-system-git-main.vercel.app',
+    'https://fullstack-blog-system-one.vercel.app',
+    'https://fullstack-blog-system-beta.vercel.app',
+    'https://fullstack-blog-system-alpha.vercel.app'
+  ];
+
+console.log('配置的允许源:', allowedOrigins);
 
 // 中间件
 app.use(cors({
   origin: function (origin, callback) {
-    // 允许没有origin的请求（比如移动应用）
+    console.log('请求来源:', origin);
+    
+    // 允许没有origin的请求（比如移动应用、Postman等）
     if (!origin) return callback(null, true);
     
     // 开发环境允许所有源
@@ -23,19 +37,20 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // 生产环境检查允许的源
+    // 生产环境 - 宽松检查以便调试
     const isAllowed = allowedOrigins.some(allowedOrigin => {
       if (allowedOrigin === '*') return true;
-      if (allowedOrigin.includes('vercel.app') && origin && origin.includes('vercel.app')) return true;
+      // 更宽松的域名匹配
+      if (origin && origin.includes('vercel.app')) return true;
+      if (origin && origin.includes('localhost')) return true;
       return allowedOrigin === origin;
     });
     
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.log('CORS拒绝:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
+    console.log('CORS检查结果:', isAllowed ? '允许' : '拒绝', '来源:', origin);
+    console.log('允许的源列表:', allowedOrigins);
+    
+    // 临时允许所有请求来调试CORS问题
+    callback(null, true);
   },
   credentials: true
 }));
