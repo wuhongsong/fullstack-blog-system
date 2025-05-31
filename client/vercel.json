@@ -4,9 +4,8 @@
   "framework": "create-react-app",
   "buildCommand": "npm run build",
   "outputDirectory": "build",
-  "installCommand": "npm install",
-  "env": {
-    "REACT_APP_API_URL": "https://whs-fullstack-blog-system.onrender.com"
+  "installCommand": "npm install",  "env": {
+    "REACT_APP_API_URL": "https://whs-fullstack-blog-system.onrender.com/api"
   },
   "routes": [
     {
