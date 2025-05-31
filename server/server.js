@@ -18,9 +18,22 @@ app.use(cors({
     // 允许没有origin的请求（比如移动应用）
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+    // 开发环境允许所有源
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // 生产环境检查允许的源
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (allowedOrigin === '*') return true;
+      if (allowedOrigin.includes('vercel.app') && origin && origin.includes('vercel.app')) return true;
+      return allowedOrigin === origin;
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.log('CORS拒绝:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
