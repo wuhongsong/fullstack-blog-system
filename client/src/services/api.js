@@ -3,7 +3,7 @@ import axios from 'axios';
 // 根据环境确定API基础URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
-    ? 'https://your-backend-url.railway.app/api' 
+    ? 'https://whs-fullstack-blog-system.onrender.com/api' 
     : '/api');
 
 const api = axios.create({
