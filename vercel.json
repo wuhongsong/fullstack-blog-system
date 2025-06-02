@@ -1,18 +1,58 @@
 {
   "version": 2,
-  "name": "blog-frontend",
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": "build",
-  "installCommand": "npm install",
-  "framework": "create-react-app",
+  "name": "fullstack-blog-system",
+  "projects": [
+    {
+      "name": "blog-frontend",
+      "source": "client",
+      "framework": "create-react-app",
+      "buildCommand": "npm run build",
+      "outputDirectory": "build",
+      "installCommand": "npm install",
+      "env": {
+        "REACT_APP_API_URL": "https://fullstack-blog-api.vercel.app/api"
+      }
+    },
+    {
+      "name": "blog-backend",
+      "source": "server",
+      "runtime": "nodejs18.x",
+      "buildCommand": "npm install",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  ],
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    },
+    {
+      "src": "server/server-supabase.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/server/server-supabase.js"
+    },
+    {
       "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "dest": "/client/build/static/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/client/build/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "server/server-supabase.js": {
+      "includeFiles": "server/**"
+    }
+  }
 }

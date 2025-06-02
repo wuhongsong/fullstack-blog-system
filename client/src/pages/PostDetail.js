@@ -48,7 +48,8 @@ const PostDetail = () => {
         setError(err.message);
       }
     }
-  };  const renderContent = (content) => {
+  };
+  const renderContent = (content) => {
     // 检查是否包含贪吃蛇游戏标记
     if (content.includes('[SNAKE_GAME]')) {
       const parts = content.split('[SNAKE_GAME]');
@@ -80,46 +81,6 @@ const PostDetail = () => {
             </div>
           )}
           <ColorMatchGame />
-          {parts[1] && (
-            <div style={{ whiteSpace: 'pre-wrap', marginTop: '20px' }}>
-              {parts[1]}
-            </div>
-          )}
-        </div>
-      );
-    }
-    
-    // 检查是否包含数字认知游戏标记
-    if (content.includes('[NUMBER_GAME]')) {
-      const parts = content.split('[NUMBER_GAME]');
-      return (
-        <div>
-          {parts[0] && (
-            <div style={{ whiteSpace: 'pre-wrap', marginBottom: '20px' }}>
-              {parts[0]}
-            </div>
-          )}
-          <NumberGame />
-          {parts[1] && (
-            <div style={{ whiteSpace: 'pre-wrap', marginTop: '20px' }}>
-              {parts[1]}
-            </div>
-          )}
-        </div>
-      );
-    }
-    
-    // 检查是否包含动物认知游戏标记
-    if (content.includes('[ANIMAL_GAME]')) {
-      const parts = content.split('[ANIMAL_GAME]');
-      return (
-        <div>
-          {parts[0] && (
-            <div style={{ whiteSpace: 'pre-wrap', marginBottom: '20px' }}>
-              {parts[0]}
-            </div>
-          )}
-          <AnimalGame />
           {parts[1] && (
             <div style={{ whiteSpace: 'pre-wrap', marginTop: '20px' }}>
               {parts[1]}
