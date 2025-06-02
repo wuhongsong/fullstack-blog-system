@@ -142,6 +142,110 @@ flowchart TB
     G_addr --> L_addr
 ```
 
+```mermaid
+
+flowchart TB
+    %% 用户空间
+    subgraph UserSpace["User Space - 用户空间"]
+        A_user["User Applications<br/>用户应用程序<br/>• 分布式应用<br/>• 数据库系统<br/>• 大数据处理<br/>• 文件管理工具"]
+        A_glibc["Standard C Library<br/>标准C库函数<br/>• open(), read(), write(), close()<br/>• opendir(), readdir(), closedir()<br/>• stat(), lstat(), fstat()<br/>• mkdir(), rmdir(), unlink()<br/>• chmod(), chown(), access()<br/>• mmap(), munmap(), msync()<br/>• link(), symlink(), readlink()"]
+        A_syscall_wrapper["System Call Interface<br/>系统调用接口<br/>• 系统调用封装<br/>• 错误处理和重试<br/>• 参数验证<br/>• 返回值转换"]
+    end
+
+    %% VFS 层
+    subgraph KernelVFS["Kernel VFS Layer - 内核虚拟文件系统层"]
+        B_syscall["System Call Entry Points<br/>系统调用入口点<br/>• sys_open, sys_read, sys_write<br/>• sys_mkdir, sys_rmdir, sys_unlink<br/>• sys_chmod, sys_chown, sys_stat<br/>• sys_mmap, sys_munmap<br/>• sys_link, sys_symlink<br/>• sys_ioctl, sys_fcntl"]
+        
+        B_vfs_core["VFS Core Operations<br/>VFS核心操作<br/>• 路径解析和查找<br/>• 文件系统抽象层<br/>• 统一接口管理<br/>• 权限检查框架"]
+        
+        B_vfs_ops["VFS Operation Interfaces<br/>VFS操作接口"]
+        
+        subgraph VFS_Interfaces["VFS Interface Definitions"]
+            C_super["super_operations<br/>超级块操作<br/>• alloc_inode(), destroy_inode()<br/>• write_super(), put_super()<br/>• sync_fs(), statfs()<br/>• remount_fs(), show_options()"]
+            
+            D_inode["inode_operations<br/>索引节点操作<br/>• create(), lookup(), unlink()<br/>• mkdir(), rmdir(), rename()<br/>• setattr(), getattr()<br/>• permission(), update_time()<br/>• symlink(), readlink()"]
+            
+            E_file["file_operations<br/>文件操作<br/>• open(), release()<br/>• read(), write(), lseek()<br/>• fsync(), flush(), mmap()<br/>• ioctl(), poll()<br/>• iterate_shared()"]
+            
+            F_dentry["dentry_operations<br/>目录项操作<br/>• d_revalidate(), d_hash()<br/>• d_compare(), d_delete()<br/>• d_release(), d_iput()"]
+            
+            G_addr["address_space_operations<br/>地址空间操作<br/>• readpage(), writepage()<br/>• readpages(), writepages()<br/>• direct_IO(), bmap()<br/>• invalidatepage(), releasepage()"]
+        end
+    end
+
+    %% 分布式文件系统自定义模块
+    subgraph CustomDFS["Custom Distributed File System - 自定义分布式文件系统"]
+        DFS_core["DFS Core Management<br/>分布式文件系统核心管理<br/>• 全局命名空间管理<br/>• 分布式元数据管理<br/>• 集群拓扑管理<br/>• 故障检测和恢复"]
+        
+        subgraph DFS_Implementations["DFS Implementation Modules"]
+            H_super["super.c - 超级块管理<br/>• 分布式挂载点管理<br/>• 集群配置初始化<br/>• 全局文件系统状态<br/>• 节点发现和注册<br/>• 负载均衡策略<br/>• fill_super(), put_super()<br/>• statfs(), sync_fs()"]
+            
+            I_inode["inode.c - 分布式索引节点<br/>• 全局inode命名空间<br/>• 跨节点inode映射<br/>• 分布式权限管理<br/>• 元数据一致性保证<br/>• 副本inode同步<br/>• lookup(), create(), unlink()<br/>• setattr(), getattr(), permission()"]
+            
+            J_dir["dir.c - 分布式目录管理<br/>• 目录分片和分布<br/>• 跨节点目录遍历<br/>• 分布式目录锁<br/>• 目录一致性维护<br/>• 大目录优化<br/>• iterate_shared(), lookup()<br/>• mkdir(), rmdir(), rename()"]
+            
+            K_file["file.c - 分布式文件操作<br/>• 文件条带化存储<br/>• 多副本读写策略<br/>• 分布式文件锁<br/>• 数据一致性控制<br/>• 故障转移处理<br/>• read(), write(), open()<br/>• fsync(), mmap(), fallocate()"]
+            
+            L_addr["addr.c - 分布式地址空间<br/>• 远程页面管理<br/>• 分布式页面缓存<br/>• 跨节点内存映射<br/>• 预读和回写策略<br/>• 缓存一致性协议<br/>• readpage(), writepage()<br/>• direct_IO(), bmap()"]
+            
+            M_network["network.c - 网络通信<br/>• 客户端-服务器通信<br/>• 节点间数据传输<br/>• RPC框架实现<br/>• 连接池管理<br/>• 心跳和故障检测<br/>• 负载均衡算法"]
+            
+            N_consistency["consistency.c - 一致性管理<br/>• 分布式锁实现<br/>• 事务处理机制<br/>• 冲突检测和解决<br/>• 版本控制系统<br/>• 租约管理<br/>• 一致性协议实现"]
+            
+            O_replication["replication.c - 副本管理<br/>• 副本创建和维护<br/>• 数据同步策略<br/>• 故障检测和恢复<br/>• 副本放置算法<br/>• 数据修复机制<br/>• 一致性哈希算法"]
+        end
+        
+        DFS_cache["Distributed Cache Layer<br/>分布式缓存层<br/>• 元数据缓存<br/>• 文件数据缓存<br/>• 缓存一致性协议<br/>• 缓存失效策略<br/>• 预取和预写<br/>• 多级缓存架构"]
+    end
+
+    %% 调用链连接
+    A_user --> A_glibc
+    A_glibc --> A_syscall_wrapper
+    A_syscall_wrapper --> B_syscall
+    
+    B_syscall --> B_vfs_core
+    B_vfs_core --> B_vfs_ops
+    B_vfs_ops --> C_super
+    B_vfs_ops --> D_inode
+    B_vfs_ops --> E_file
+    B_vfs_ops --> F_dentry
+    B_vfs_ops --> G_addr
+    
+    C_super --> H_super
+    D_inode --> I_inode
+    D_inode --> J_dir
+    E_file --> K_file
+    E_file --> J_dir
+    F_dentry --> J_dir
+    G_addr --> L_addr
+    
+    DFS_core --> H_super
+    DFS_core --> I_inode
+    DFS_core --> J_dir
+    DFS_core --> K_file
+    DFS_core --> L_addr
+    
+    H_super --> DFS_cache
+    I_inode --> M_network
+    J_dir --> M_network
+    K_file --> M_network
+    L_addr --> M_network
+    
+    M_network --> N_consistency
+    M_network --> O_replication
+    N_consistency --> DFS_cache
+    O_replication --> DFS_cache
+
+    %% 样式定义
+    classDef userSpace fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef vfsLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef dfsLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef coreModule fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    
+    class A_user,A_glibc,A_syscall_wrapper userSpace
+    class B_syscall,B_vfs_core,B_vfs_ops,C_super,D_inode,E_file,F_dentry,G_addr vfsLayer
+    class DFS_core,H_super,I_inode,J_dir,K_file,L_addr,M_network,N_consistency,O_replication,DFS_cache dfsLayer
+```
 
 
 ### 图 2：文件系统内部模块交互
