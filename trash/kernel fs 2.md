@@ -73,6 +73,146 @@
 
 以下是分布式文件系统的完整架构图，展示了从用户空间到分布式存储集群的完整数据流和控制流：
 
+## 优化后的 Mermaid 架构图（Ceph Deep Dive）
+
+### 图 1：VFS 总览（用户态 → 系统调用 → VFS 接口 → 文件系统模块）
+```mermaid
+flowchart TB
+    %% 用户空间
+    subgraph "User Space - 用户空间"
+        A_user[Applications - 用户程序]
+        A_glibc[glibc - 系统调用封装，如 "open()", "read()", "write()"]
+    end
+
+    %% VFS 层
+    subgraph "Kernel VFS Layer - 内核虚拟文件系统层"
+        B_syscall[System Call Entry - 系统调用入口，如 sys_open, sys_read, sys_write]
+
+        B_vfs_rw[vfs_open, vfs_read, vfs_write - 打开/读/写文件]
+        B_vfs_meta[vfs_mkdir, vfs_create, vfs_unlink - 创建/删除目录与文件]
+        B_vfs_path[vfs_lookup, vfs_rename, vfs_symlink - 路径解析与重命名]
+        B_vfs_attr[vfs_getattr, vfs_setattr, vfs_listxattr - 属性与扩展属性管理]
+        B_vfs_sync[vfs_fsync, vfs_fallocate - 同步与预分配操作]
+
+        C_super[super_operations - 超级块接口，如 alloc_inode, write_super, statfs]
+        D_inode[inode_operations - inode接口，如 create, unlink, rename, getattr]
+        E_dentry[dentry_operations - dentry接口，如 d_revalidate, d_release, d_iput]
+        F_file[file_operations - 文件读写接口，如 open, release, read, write]
+        G_addr[address_space_operations - 地址空间读写，如 readpage, writepage, direct_IO]
+    end
+
+    %% 自定义文件系统模块
+    subgraph "Custom FS Module - 自定义文件系统模块"
+        H_super[super.c - 文件系统挂载与卸载处理，实现 alloc_inode, fill_super 等]
+        I_inode[inode.c - inode 生命周期管理，包括创建、销毁、缓存回收]
+        J_dir[dir.c - 目录操作实现，如 mkdir, rmdir, lookup, readdir, rename]
+        K_file[file.c - 文件操作，如 read, write, flush, fsync]
+        L_addr[addr.c - 页面缓存与IO接口实现，如 readpage, writepage, direct_IO]
+    end
+
+    %% 调用链连接
+    A_user --> A_glibc --> B_syscall
+    B_syscall --> B_vfs_rw --> F_file
+    B_syscall --> B_vfs_meta --> D_inode
+    B_syscall --> B_vfs_path --> D_inode
+    B_syscall --> B_vfs_attr --> D_inode
+    B_syscall --> B_vfs_sync --> F_file
+    B_syscall --> C_super --> H_super
+    B_syscall --> E_dentry --> J_dir
+    F_file --> K_file
+    D_inode --> I_inode
+    D_inode --> J_dir
+    G_addr --> L_addr
+```
+
+---
+
+### 图 2：文件系统内部模块交互
+```mermaid
+flowchart TB
+    I_inode[inode.c - 管理inode创建、销毁、缓存回收]
+    J_dir[dir.c - 实现lookup、mkdir、rmdir、readdir等目录接口]
+    K_file[file.c - 处理read、write、flush、fsync等文件IO]
+    L_addr[addr.c - 页面缓存、写入脏页、direct_IO等操作]
+    M_meta[metadata.c - 元数据操作的核心封装，如同步、变更通知]
+    N_client[client.c - 提供对远端集群的RPC访问封装]
+    O_cache[cache.c - 提供基于LRU等策略的本地缓存机制]
+
+    I_inode <--> M_meta
+    J_dir <--> M_meta
+    K_file <--> M_meta
+    L_addr <--> M_meta
+    M_meta <--> N_client
+
+    I_inode <--> O_cache
+    J_dir <--> O_cache
+    K_file <--> O_cache
+    L_addr <--> O_cache
+```
+
+---
+
+### 图 3：网络通信 & 协议层
+```mermaid
+flowchart TB
+    N_client[client.c - 向集群元数据/数据节点发起请求]
+    T_net[network.c - TCP/UDP连接封装与事件驱动]
+    T_proto[protocol.c - 自定义协议编解码逻辑（如消息头、校验、版本）]
+    T_conn[connection.c - 长连接池管理，负载均衡复用]
+    T_auth[auth.c - 认证模块（如Token、证书）]
+    T_crypto[crypto.c - TLS/SSL加密封装]
+    T_ser[serialization.c - 使用protobuf/json进行序列化处理]
+    T_rpc[rpc.c - 抽象的RPC框架（支持超时、重试、序列号匹配等）]
+
+    N_client --> T_net --> T_proto --> T_ser
+    T_proto --> T_crypto
+    N_client --> T_auth
+    N_client --> T_rpc
+    T_net --> T_conn
+```
+
+---
+
+### 图 4：页面缓存与写回机制
+```mermaid
+flowchart TB
+    L_addr[addr.c - 与address_space_operations接口挂钩]
+    X_cache[Page Cache - 提供readpage、writepage所需页面]
+    Z_writeback[Writeback - 提交脏页回写]
+    Z_readahead[Readahead - 预读取页面，加速顺序读]
+    Z_reclaim[Memory Reclaim - 内存回收触发页回收]
+    Z_dirty[Dirty Tracking - 跟踪脏页状态并通知回写线程]
+    K_file[file.c - 发起readahead请求]
+    O_cache[cache.c - 支持内存回收配合页回收机制]
+
+    L_addr <--> X_cache
+    L_addr --> Z_writeback
+    L_addr --> Z_dirty
+    K_file --> Z_readahead
+    O_cache --> Z_reclaim
+```
+
+---
+
+### 图 5：与分布式集群交互
+```mermaid
+flowchart TB
+    FF_mds[Metadata Server - 元数据服务（例如类似MDS）]
+    GG_ds[Data Server - 数据块服务]
+    HH_etcd[etcd - 协调器（集群状态、锁等）]
+    II_config[Config Service - 中央配置服务]
+    JJ_lb[Load Balancer - 用于流量引导与连接调度]
+    KK_monitor[Monitoring - 收集日志、性能、告警信息]
+
+    T_net <--> FF_mds
+    T_net <--> GG_ds
+    T_net <--> HH_etcd
+    T_net <--> II_config
+    T_conn --> JJ_lb
+    R2_recover[recovery.c - 故障恢复机制] --> KK_monitor
+    N_client --> KK_monitor
+```
+
 ```mermaid
 graph TB
 
