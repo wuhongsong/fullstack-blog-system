@@ -76,6 +76,60 @@
 ## 优化后的 Mermaid 架构图（Ceph Deep Dive）
 
 ### 图 1：VFS 总览（用户态 → 系统调用 → VFS 接口 → 文件系统模块）
+```
+flowchart TB
+    %% 用户空间
+    subgraph UserSpace["User Space - 用户空间"]
+        A_user[Applications\n用户程序]
+        A_glibc[glibc\n如 open(), read(), write()]
+    end
+
+    %% VFS 层
+    subgraph KernelVFS["Kernel VFS Layer - 内核虚拟文件系统层"]
+        B_syscall[System Call Entry\nsys_open, sys_read, sys_write]
+        B_vfs_rw[vfs_open\nvfs_read\nvfs_write]
+        B_vfs_meta[vfs_mkdir\nvfs_create\nvfs_unlink]
+        B_vfs_path[vfs_lookup\nvfs_rename\nvfs_symlink]
+        B_vfs_attr[vfs_getattr\nvfs_setattr\nvfs_listxattr]
+        B_vfs_sync[vfs_fsync\nvfs_fallocate]
+
+        C_super[super_operations\nalloc_inode, write_super, statfs]
+        D_inode[inode_operations\ncreate, unlink, rename, getattr]
+        E_dentry[dentry_operations\nd_revalidate, d_release, d_iput]
+        F_file[file_operations\nopen, release, read, write]
+        G_addr[address_space_operations\nreadpage, writepage, direct_IO]
+    end
+
+    %% FS 模块
+    subgraph CustomFS["Custom FS Module - 自定义文件系统模块"]
+        H_super[super.c\n挂载、卸载\nalloc_inode, fill_super]
+        I_inode[inode.c\ninode 生命周期管理]
+        J_dir[dir.c\nmkdir, rmdir, lookup, rename]
+        K_file[file.c\nread, write, flush, fsync]
+        L_addr[addr.c\nreadpage, writepage, direct_IO]
+    end
+
+    %% 调用链连接
+    A_user --> A_glibc
+    A_glibc --> B_syscall
+    B_syscall --> B_vfs_rw
+    B_syscall --> B_vfs_meta
+    B_syscall --> B_vfs_path
+    B_syscall --> B_vfs_attr
+    B_syscall --> B_vfs_sync
+    B_vfs_rw --> F_file
+    B_vfs_meta --> D_inode
+    B_vfs_path --> D_inode
+    B_vfs_attr --> D_inode
+    B_vfs_sync --> F_file
+    C_super --> H_super
+    D_inode --> I_inode
+    D_inode --> J_dir
+    F_file --> K_file
+    E_dentry --> J_dir
+    G_addr --> L_addr
+
+```
 ```mermaid
 flowchart TB
     %% 用户空间
