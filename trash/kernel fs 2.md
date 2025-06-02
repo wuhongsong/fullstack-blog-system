@@ -78,6 +78,60 @@
 ### 图 1：VFS 总览（用户态 → 系统调用 → VFS 接口 → 文件系统模块）
 
 ```mermaid
+flowchart TB
+    %% 用户空间
+    subgraph UserSpace["User Space - 用户空间"]
+        A_user["Applications<br/>用户程序"]
+        A_glibc["glibc<br/>如 open(), read(), write()"]
+    end
+
+    %% VFS 层
+    subgraph KernelVFS["Kernel VFS Layer - 内核虚拟文件系统层"]
+        B_syscall["System Call Entry<br/>sys_open, sys_read, sys_write"]
+        B_vfs_rw["vfs_open<br/>vfs_read<br/>vfs_write"]
+        B_vfs_meta["vfs_mkdir<br/>vfs_create<br/>vfs_unlink"]
+        B_vfs_path["vfs_lookup<br/>vfs_rename<br/>vfs_symlink"]
+        B_vfs_attr["vfs_getattr<br/>vfs_setattr<br/>vfs_listxattr"]
+        B_vfs_sync["vfs_fsync<br/>vfs_fallocate"]
+
+        C_super["super_operations<br/>alloc_inode, write_super, statfs"]
+        D_inode["inode_operations<br/>create, unlink, rename, getattr"]
+        E_dentry["dentry_operations<br/>d_revalidate, d_release, d_iput"]
+        F_file["file_operations<br/>open, release, read, write"]
+        G_addr["address_space_operations<br/>readpage, writepage, direct_IO"]
+    end
+
+    %% FS 模块
+    subgraph CustomFS["Custom FS Module - 自定义文件系统模块"]
+        H_super["super.c<br/>挂载、卸载<br/>alloc_inode, fill_super"]
+        I_inode["inode.c<br/>inode 生命周期管理"]
+        J_dir["dir.c<br/>mkdir, rmdir, lookup, rename"]
+        K_file["file.c<br/>read, write, flush, fsync"]
+        L_addr["addr.c<br/>readpage, writepage, direct_IO"]
+    end
+
+    %% 调用链连接
+    A_user --> A_glibc
+    A_glibc --> B_syscall
+    B_syscall --> B_vfs_rw
+    B_syscall --> B_vfs_meta
+    B_syscall --> B_vfs_path
+    B_syscall --> B_vfs_attr
+    B_syscall --> B_vfs_sync
+    B_vfs_rw --> F_file
+    B_vfs_meta --> D_inode
+    B_vfs_path --> D_inode
+    B_vfs_attr --> D_inode
+    B_vfs_sync --> F_file
+    C_super --> H_super
+    D_inode --> I_inode
+    D_inode --> J_dir
+    F_file --> K_file
+    E_dentry --> J_dir
+    G_addr --> L_addr
+```
+
+```mermaid
 
 flowchart TB
     %% 用户空间
