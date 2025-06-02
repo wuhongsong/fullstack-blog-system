@@ -608,6 +608,133 @@ graph TB
     class KI1,KI2,KI3,KI4,KI5,KI6 kernel
 ```
 
+VFS 总览（用户态 → 系统调用 → VFS 接口 → 文件系统模块）
+```mermaid
+flowchart TB
+    subgraph "User Space - 用户空间"
+        A[Applications]
+        A1[glibc - System Call Wrapper]
+    end
+
+    subgraph "Kernel VFS Layer"
+        B[System Call Entry Points]
+        B1[vfs_open, read, write]
+        B2[vfs_mkdir, create, unlink]
+
+        C[super_operations]
+        D[inode_operations]
+        E[dentry_operations]
+        F[file_operations]
+        G[address_space_operations]
+    end
+
+    subgraph "Custom FS Module"
+        H[super.c - Mount/Unmount Handler]
+        I[inode.c - inode lifecycle]
+        J[dir.c - Directory ops]
+        K[file.c - File read/write]
+        L[addr.c - Page Cache I/O]
+    end
+
+    %% 调用链
+    A --> A1 --> B
+    B --> B1 --> F
+    B --> B2 --> D
+    B --> C --> H
+    F --> K
+    D --> I
+    D --> J
+    G --> L
+```
+
+---
+
+文件系统内部模块交互
+```mermaid
+flowchart TB
+    I[inode.c]
+    J[dir.c]
+    K[file.c]
+    L[addr.c]
+    M[metadata.c]
+    N[client.c - RPC Client]
+    O[cache.c - Local Cache]
+
+    I <--> M
+    J <--> M
+    K <--> M
+    L <--> M
+    M <--> N
+
+    I <--> O
+    J <--> O
+    K <--> O
+    L <--> O
+```
+
+---
+网络通信 & 协议层
+```mermaid
+flowchart TB
+    N[client.c]
+    T1[network.c - Transport Layer]
+    T2[protocol.c - Custom Protocol]
+    T3[connection.c - Conn Pool]
+    T4[auth.c - Auth]
+    T5[crypto.c - TLS/SSL]
+    T6[serialization.c - Marshal/Unmarshal]
+    T7[rpc.c - RPC Abstraction]
+
+    N --> T1 --> T2 --> T6
+    T2 --> T5
+    N --> T4
+    N --> T7
+    T1 --> T3
+```
+
+---
+
+页面缓存与写回机制
+```mermaid
+flowchart TB
+    L[addr.c - Page IO]
+    X[Page Cache]
+    Z1[Writeback]
+    Z2[Readahead]
+    Z3[Memory Reclaim]
+    Z4[Dirty Tracking]
+
+    L <--> X
+    L --> Z1
+    L --> Z4
+    K[file.c] --> Z2
+    O[cache.c] --> Z3
+```
+
+---
+
+与分布式集群交互
+```mermaid
+flowchart TB
+    FF[Metadata Server]
+    GG[Data Server]
+    HH[etcd - Coordination]
+    II[Config Service]
+    JJ[Load Balancer]
+    KK[Monitoring]
+
+    T1 <--> FF
+    T1 <--> GG
+    T1 <--> HH
+    T1 <--> II
+    T3 --> JJ
+    R2[recovery.c] --> KK
+    N --> KK
+```
+
+---
+
+
 #### 1.2.2 架构说明
 
 **用户空间层**：
