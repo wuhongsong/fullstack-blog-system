@@ -6,11 +6,11 @@ const CANVAS_SIZE = 400;
 
 // 速度级别配置
 const SPEED_LEVELS = [
-  { name: '慢速', value: 300, emoji: '🐌' },
-  { name: '正常', value: 200, emoji: '🚶' },
-  { name: '快速', value: 150, emoji: '🏃' },
-  { name: '极速', value: 100, emoji: '🚀' },
-  { name: '超音速', value: 70, emoji: '⚡' }
+  { name: '超慢速', value: 500, emoji: '🐌' },
+  { name: '慢速', value: 400, emoji: '🚶' },
+  { name: '正常', value: 300, emoji: '🏃' },
+  { name: '快速', value: 200, emoji: '🚀' },
+  { name: '极速', value: 150, emoji: '⚡' }
 ];
 
 const SnakeGame = () => {
