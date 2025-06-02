@@ -3,7 +3,7 @@ import axios from 'axios';
 // 根据环境确定API基础URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
-    ? 'https://blog-backend-paqjnud1e-wuhongsongs-projects.vercel.app/api' 
+    ? 'https://blog-backend-lb7b9rs7p-wuhongsongs-projects.vercel.app/api' 
     : 'http://localhost:5000/api');
 
 console.log('API Base URL:', API_BASE_URL);
