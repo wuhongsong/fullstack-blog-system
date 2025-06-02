@@ -82,36 +82,36 @@ flowchart TB
     %% 用户空间
     subgraph UserSpace["User Space - 用户空间"]
         A_user["Applications<br/>用户程序"]
-        A_glibc["glibc<br/>open(), read(), write(), close()<br/>opendir(), readdir(), closedir()<br/>lseek(), truncate(), chmod()<br/>chown(), link(), symlink()<br/>readlink(), stat(), access()"]
+        A_glibc["glibc 库函数<br/>open(), read(), write(), close()<br/>opendir(), readdir(), closedir()<br/>lseek(), lstat(), fstat(), stat()<br/>chmod(), chown(), chgrp()<br/>mkdir(), rmdir(), unlink()<br/>link(), symlink(), readlink()<br/>truncate(), ftruncate()<br/>access(), faccessat()"]
     end
 
     %% VFS 层
     subgraph KernelVFS["Kernel VFS Layer - 内核虚拟文件系统层"]
-        B_syscall["System Call Entry<br/>sys_open, sys_read, sys_write<br/>sys_lseek, sys_close"]
+        B_syscall["System Call Entry<br/>sys_open, sys_read, sys_write<br/>sys_lseek, sys_close, sys_getdents<br/>sys_mkdir, sys_rmdir, sys_unlink<br/>sys_chmod, sys_chown, sys_truncate<br/>sys_link, sys_symlink, sys_readlink"]
         B_vfs_rw["vfs_open<br/>vfs_read<br/>vfs_write<br/>vfs_lseek"]
         B_vfs_meta["vfs_mkdir<br/>vfs_create<br/>vfs_unlink<br/>vfs_rmdir<br/>vfs_link"]
         B_vfs_path["vfs_lookup<br/>vfs_rename<br/>vfs_symlink<br/>vfs_readlink"]
-        B_vfs_attr["vfs_getattr<br/>vfs_setattr<br/>vfs_listxattr<br/>vfs_getxattr<br/>vfs_setxattr"]
+        B_vfs_attr["vfs_getattr<br/>vfs_setattr<br/>vfs_listxattr<br/>vfs_getxattr<br/>vfs_setxattr<br/>notify_change"]
         B_vfs_sync["vfs_fsync<br/>vfs_fallocate<br/>vfs_truncate"]
-        B_vfs_dir["vfs_readdir<br/>vfs_iterate"]
-        B_vfs_perm["vfs_permission<br/>vfs_may_open"]
+        B_vfs_dir["iterate_dir<br/>vfs_readdir"]
+        B_vfs_perm["vfs_permission<br/>may_open<br/>inode_permission"]
 
-        C_super["super_operations<br/>alloc_inode, write_super, statfs<br/>put_super, sync_fs"]
-        D_inode["inode_operations<br/>create, unlink, rename, getattr<br/>setattr, mkdir, rmdir, link<br/>symlink, readlink, permission<br/>listxattr, getxattr, setxattr"]
-        E_dentry["dentry_operations<br/>d_revalidate, d_release, d_iput<br/>d_hash, d_compare"]
-        F_file["file_operations<br/>open, release, read, write<br/>lseek, fsync, flush, mmap<br/>poll, ioctl, splice"]
-        G_addr["address_space_operations<br/>readpage, writepage, direct_IO<br/>writepages, readpages, bmap"]
+        C_super["super_operations<br/>alloc_inode, destroy_inode<br/>write_super, put_super<br/>sync_fs, statfs, remount_fs"]
+        D_inode["inode_operations<br/>create, lookup, link, unlink<br/>mkdir, rmdir, mknod, rename<br/>setattr, getattr, permission<br/>symlink, readlink, follow_link<br/>listxattr, getxattr, setxattr"]
+        E_dentry["dentry_operations<br/>d_revalidate, d_hash, d_compare<br/>d_delete, d_release, d_iput"]
+        F_file["file_operations<br/>open, release, read, write<br/>lseek, fsync, flush, mmap<br/>poll, ioctl, splice<br/>iterate_shared, iterate<br/>lock, flock"]
+        G_addr["address_space_operations<br/>readpage, writepage, writepages<br/>readpages, direct_IO, bmap<br/>invalidatepage, releasepage<br/>migratepage, error_remove_page"]
     end
 
     %% FS 模块
     subgraph CustomFS["Custom FS Module - 自定义文件系统模块"]
-        H_super["super.c<br/>挂载、卸载<br/>alloc_inode, fill_super<br/>put_super, sync_fs, statfs"]
-        I_inode["inode.c<br/>inode 生命周期管理<br/>创建、删除、属性操作<br/>权限检查"]
-        J_dir["dir.c<br/>mkdir, rmdir, lookup, rename<br/>readdir, iterate<br/>create, unlink, link"]
-        K_file["file.c<br/>read, write, flush, fsync<br/>open, release, lseek<br/>mmap, splice, ioctl"]
-        L_addr["addr.c<br/>readpage, writepage, direct_IO<br/>readpages, writepages<br/>invalidatepage, releasepage"]
-        M_symlink["symlink.c<br/>symlink, readlink<br/>follow_link, put_link"]
-        N_xattr["xattr.c<br/>getxattr, setxattr<br/>listxattr, removexattr"]
+        H_super["super.c<br/>挂载、卸载<br/>alloc_inode, destroy_inode<br/>fill_super, put_super<br/>sync_fs, statfs, remount_fs"]
+        I_inode["inode.c<br/>inode 生命周期管理<br/>lookup, create, unlink<br/>mkdir, rmdir, setattr, getattr<br/>权限检查 permission"]
+        J_dir["dir.c<br/>目录操作<br/>iterate_shared, iterate<br/>lookup, create, unlink<br/>mkdir, rmdir, rename"]
+        K_file["file.c<br/>文件操作<br/>open, release, read, write<br/>lseek, fsync, flush<br/>mmap, splice, ioctl"]
+        L_addr["addr.c<br/>地址空间操作<br/>readpage, writepage<br/>readpages, writepages<br/>direct_IO, bmap"]
+        M_symlink["symlink.c<br/>符号链接<br/>symlink, readlink<br/>follow_link, put_link"]
+        N_xattr["xattr.c<br/>扩展属性<br/>getxattr, setxattr<br/>listxattr, removexattr"]
     end
 
     %% 调用链连接
@@ -142,111 +142,7 @@ flowchart TB
     G_addr --> L_addr
 ```
 
-```mermaid
 
-flowchart TB
-    %% 用户空间
-    subgraph UserSpace["User Space - 用户空间"]
-        A_user[Applications\n用户程序]
-        A_glibc[glibc\n如 open(), read(), write()]
-    end
-
-    %% VFS 层
-    subgraph KernelVFS["Kernel VFS Layer - 内核虚拟文件系统层"]
-        B_syscall[System Call Entry\nsys_open, sys_read, sys_write]
-        B_vfs_rw[vfs_open\nvfs_read\nvfs_write]
-        B_vfs_meta[vfs_mkdir\nvfs_create\nvfs_unlink]
-        B_vfs_path[vfs_lookup\nvfs_rename\nvfs_symlink]
-        B_vfs_attr[vfs_getattr\nvfs_setattr\nvfs_listxattr]
-        B_vfs_sync[vfs_fsync\nvfs_fallocate]
-
-        C_super[super_operations\nalloc_inode, write_super, statfs]
-        D_inode[inode_operations\ncreate, unlink, rename, getattr]
-        E_dentry[dentry_operations\nd_revalidate, d_release, d_iput]
-        F_file[file_operations\nopen, release, read, write]
-        G_addr[address_space_operations\nreadpage, writepage, direct_IO]
-    end
-
-    %% FS 模块
-    subgraph CustomFS["Custom FS Module - 自定义文件系统模块"]
-        H_super[super.c\n挂载、卸载\nalloc_inode, fill_super]
-        I_inode[inode.c\ninode 生命周期管理]
-        J_dir[dir.c\nmkdir, rmdir, lookup, rename]
-        K_file[file.c\nread, write, flush, fsync]
-        L_addr[addr.c\nreadpage, writepage, direct_IO]
-    end
-
-    %% 调用链连接
-    A_user --> A_glibc
-    A_glibc --> B_syscall
-    B_syscall --> B_vfs_rw
-    B_syscall --> B_vfs_meta
-    B_syscall --> B_vfs_path
-    B_syscall --> B_vfs_attr
-    B_syscall --> B_vfs_sync
-    B_vfs_rw --> F_file
-    B_vfs_meta --> D_inode
-    B_vfs_path --> D_inode
-    B_vfs_attr --> D_inode
-    B_vfs_sync --> F_file
-    C_super --> H_super
-    D_inode --> I_inode
-    D_inode --> J_dir
-    F_file --> K_file
-    E_dentry --> J_dir
-    G_addr --> L_addr
-
-```
-```mermaid
-flowchart TB
-    %% 用户空间
-    subgraph "User Space - 用户空间"
-        A_user[Applications - 用户程序]
-        A_glibc[glibc - 系统调用封装，如 "open()", "read()", "write()"]
-    end
-
-    %% VFS 层
-    subgraph "Kernel VFS Layer - 内核虚拟文件系统层"
-        B_syscall[System Call Entry - 系统调用入口，如 sys_open, sys_read, sys_write]
-
-        B_vfs_rw[vfs_open, vfs_read, vfs_write - 打开/读/写文件]
-        B_vfs_meta[vfs_mkdir, vfs_create, vfs_unlink - 创建/删除目录与文件]
-        B_vfs_path[vfs_lookup, vfs_rename, vfs_symlink - 路径解析与重命名]
-        B_vfs_attr[vfs_getattr, vfs_setattr, vfs_listxattr - 属性与扩展属性管理]
-        B_vfs_sync[vfs_fsync, vfs_fallocate - 同步与预分配操作]
-
-        C_super[super_operations - 超级块接口，如 alloc_inode, write_super, statfs]
-        D_inode[inode_operations - inode接口，如 create, unlink, rename, getattr]
-        E_dentry[dentry_operations - dentry接口，如 d_revalidate, d_release, d_iput]
-        F_file[file_operations - 文件读写接口，如 open, release, read, write]
-        G_addr[address_space_operations - 地址空间读写，如 readpage, writepage, direct_IO]
-    end
-
-    %% 自定义文件系统模块
-    subgraph "Custom FS Module - 自定义文件系统模块"
-        H_super[super.c - 文件系统挂载与卸载处理，实现 alloc_inode, fill_super 等]
-        I_inode[inode.c - inode 生命周期管理，包括创建、销毁、缓存回收]
-        J_dir[dir.c - 目录操作实现，如 mkdir, rmdir, lookup, readdir, rename]
-        K_file[file.c - 文件操作，如 read, write, flush, fsync]
-        L_addr[addr.c - 页面缓存与IO接口实现，如 readpage, writepage, direct_IO]
-    end
-
-    %% 调用链连接
-    A_user --> A_glibc --> B_syscall
-    B_syscall --> B_vfs_rw --> F_file
-    B_syscall --> B_vfs_meta --> D_inode
-    B_syscall --> B_vfs_path --> D_inode
-    B_syscall --> B_vfs_attr --> D_inode
-    B_syscall --> B_vfs_sync --> F_file
-    B_syscall --> C_super --> H_super
-    B_syscall --> E_dentry --> J_dir
-    F_file --> K_file
-    D_inode --> I_inode
-    D_inode --> J_dir
-    G_addr --> L_addr
-```
-
----
 
 ### 图 2：文件系统内部模块交互
 ```mermaid
