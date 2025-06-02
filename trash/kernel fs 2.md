@@ -76,7 +76,9 @@
 ## 优化后的 Mermaid 架构图（Ceph Deep Dive）
 
 ### 图 1：VFS 总览（用户态 → 系统调用 → VFS 接口 → 文件系统模块）
-```
+
+```mermaid
+
 flowchart TB
     %% 用户空间
     subgraph UserSpace["User Space - 用户空间"]
