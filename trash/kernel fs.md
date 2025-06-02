@@ -1180,7 +1180,7 @@ const struct address_space_operations myfs_aops = {
     .is_partially_uptodate = myfs_is_partially_uptodate,
     .error_remove_page = generic_error_remove_page,
 };
-
+```
 ### 3.2 文件操作
 
 文件操作通过`file_operations`结构实现，定义了用户空间程序与文件交互的接口：
