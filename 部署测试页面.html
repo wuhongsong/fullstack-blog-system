@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客系统部署测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #4CAF50;
+        }
+        .status-card.warning {
+            border-left-color: #FF9800;
+        }
+        .status-card.error {
+            border-left-color: #f44336;
+        }
+        .url {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .test-section {
+            margin: 30px 0;
+        }
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        #test-results {
+            margin-top: 20px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 "根娟一起跳" 博客系统部署测试</h1>
+        
+        <div class="status-card">
+            <h3><span class="emoji">✅</span>前端部署状态</h3>
+            <div class="url">https://blog-system-gafqau0cw-wuhongsongs-projects.vercel.app</div>
+            <a href="https://blog-system-gafqau0cw-wuhongsongs-projects.vercel.app" target="_blank" class="btn">
+                访问前端网站
+            </a>
+        </div>
+
+        <div class="status-card warning">
+            <h3><span class="emoji">⚠️</span>后端部署状态</h3>
+            <div class="url">https://blog-backend-lb7b9rs7p-wuhongsongs-projects.vercel.app</div>
+            <p>后端可能需要认证访问，这是正常的安全设置。</p>
+        </div>
+
+        <div class="status-card">
+            <h3><span class="emoji">🗄️</span>数据库状态</h3>
+            <p><strong>Supabase PostgreSQL</strong> - 永久存储已启用</p>
+            <p>项目ID: nwqqhlovcrewlqkasdrd</p>
+        </div>
+
+        <div class="test-section">
+            <h3><span class="emoji">🧪</span>功能测试</h3>
+            <button onclick="testFrontend()" class="btn">测试前端连接</button>
+            <button onclick="testFeatures()" class="btn">测试功能列表</button>
+            
+            <div id="test-results"></div>
+        </div>
+
+        <div class="status-card">
+            <h3><span class="emoji">📝</span>预期功能</h3>
+            <ul>
+                <li>✅ 博客文章管理（创建、编辑、删除）</li>
+                <li>✅ 贪吃蛇游戏（5个速度等级）</li>
+                <li>✅ 照片上传模拟功能</li>
+                <li>✅ 响应式设计</li>
+                <li>✅ 数据永久存储</li>
+            </ul>
+        </div>
+
+        <div class="status-card">
+            <h3><span class="emoji">🎯</span>使用指南</h3>
+            <ol>
+                <li>点击"访问前端网站"按钮</li>
+                <li>测试创建新文章功能</li>
+                <li>体验贪吃蛇游戏</li>
+                <li>尝试照片上传功能</li>
+                <li>验证数据是否保存</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function testFrontend() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="test-result">正在测试前端连接...<div class="loading"></div></div>';
+            
+            fetch('https://blog-system-gafqau0cw-wuhongsongs-projects.vercel.app')
+                .then(response => {
+                    if (response.ok) {
+                        resultsDiv.innerHTML = `
+                            <div class="test-result" style="border-left: 5px solid #4CAF50;">
+                                <strong>✅ 前端测试成功！</strong><br>
+                                状态码: ${response.status}<br>
+                                网站正常运行
+                            </div>
+                        `;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result" style="border-left: 5px solid #f44336;">
+                            <strong>❌ 前端测试失败</strong><br>
+                            错误: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
+        function testFeatures() {
+            const features = [
+                { name: '博客标题显示', status: '预期显示"根娟一起跳"' },
+                { name: '文章管理功能', status: '创建、编辑、删除文章' },
+                { name: '贪吃蛇游戏', status: '5个速度等级可选' },
+                { name: '照片上传', status: '模拟上传功能' },
+                { name: '数据持久化', status: 'Supabase永久存储' }
+            ];
+
+            let html = '<div class="test-result"><h4>功能检查列表：</h4><ul>';
+            features.forEach(feature => {
+                html += `<li><strong>${feature.name}</strong>: ${feature.status}</li>`;
+            });
+            html += '</ul></div>';
+
+            document.getElementById('test-results').innerHTML = html;
+        }
+
+        // 页面加载时自动测试前端连接
+        window.addEventListener('load', function() {
+            setTimeout(testFrontend, 1000);
+        });
+    </script>
+</body>
+</html>

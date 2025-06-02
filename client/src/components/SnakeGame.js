@@ -6,11 +6,13 @@ const CANVAS_SIZE = 400;
 
 // 速度级别配置
 const SPEED_LEVELS = [
-  { name: '超慢速', value: 500, emoji: '🐌' },
+  { name: '缓慢', value: 600, emoji: '🐌' },
+  { name: '超慢速', value: 500, emoji: '🚲' },
   { name: '慢速', value: 400, emoji: '🚶' },
   { name: '正常', value: 300, emoji: '🏃' },
   { name: '快速', value: 200, emoji: '🚀' },
-  { name: '极速', value: 150, emoji: '⚡' }
+  { name: '极速', value: 150, emoji: '⚡' },
+  { name: '闪电', value: 100, emoji: '⭐' }
 ];
 
 const SnakeGame = () => {
@@ -20,7 +22,7 @@ const SnakeGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
-  const [speedLevel, setSpeedLevel] = useState(2); // 默认快速模式 (索引2)
+  const [speedLevel, setSpeedLevel] = useState(3); // 默认正常模式 (索引3)
 
   const generateFood = useCallback(() => {
     const newFood = {
