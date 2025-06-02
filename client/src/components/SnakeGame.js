@@ -4,6 +4,15 @@ import './SnakeGame.css';
 const GRID_SIZE = 20;
 const CANVAS_SIZE = 400;
 
+// 速度级别配置
+const SPEED_LEVELS = [
+  { name: '慢速', value: 300, emoji: '🐌' },
+  { name: '正常', value: 200, emoji: '🚶' },
+  { name: '快速', value: 150, emoji: '🏃' },
+  { name: '极速', value: 100, emoji: '🚀' },
+  { name: '超音速', value: 70, emoji: '⚡' }
+];
+
 const SnakeGame = () => {
   const [snake, setSnake] = useState([{ x: 10, y: 10 }]);
   const [food, setFood] = useState({ x: 15, y: 15 });
@@ -11,6 +20,7 @@ const SnakeGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
+  const [speedLevel, setSpeedLevel] = useState(2); // 默认快速模式 (索引2)
 
   const generateFood = useCallback(() => {
     const newFood = {
@@ -19,7 +29,6 @@ const SnakeGame = () => {
     };
     return newFood;
   }, []);
-
   const resetGame = () => {
     setSnake([{ x: 10, y: 10 }]);
     setFood(generateFood());
@@ -32,6 +41,19 @@ const SnakeGame = () => {
   const startGame = () => {
     setGameStarted(true);
     setDirection({ x: 1, y: 0 });
+  };
+
+  const changeSpeed = (newSpeedLevel) => {
+    setSpeedLevel(newSpeedLevel);
+    // 如果游戏正在进行，提示重新开始
+    if (gameStarted && !gameOver) {
+      const confirmChange = window.confirm('更改速度需要重新开始游戏，确定吗？');
+      if (confirmChange) {
+        resetGame();
+      } else {
+        return; // 取消速度更改
+      }
+    }
   };
 
   const moveSnake = useCallback(() => {
@@ -96,19 +118,35 @@ const SnakeGame = () => {
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [direction, gameStarted]);
-
   useEffect(() => {
-    const gameInterval = setInterval(moveSnake, 150);
+    const gameInterval = setInterval(moveSnake, SPEED_LEVELS[speedLevel].value);
     return () => clearInterval(gameInterval);
-  }, [moveSnake]);
+  }, [moveSnake, speedLevel]);
 
   return (
-    <div className="snake-game">
-      <div className="game-header">
+    <div className="snake-game">      <div className="game-header">
         <h3>🐍 贪吃蛇游戏</h3>
         <div className="game-info">
           <span>得分: {score}</span>
           <span>最高分: {localStorage.getItem('snakeHighScore') || 0}</span>
+        </div>
+        
+        {/* 速度控制 */}
+        <div className="speed-control">
+          <label>游戏速度: {SPEED_LEVELS[speedLevel].emoji} {SPEED_LEVELS[speedLevel].name}</label>
+          <div className="speed-buttons">
+            {SPEED_LEVELS.map((level, index) => (
+              <button
+                key={index}
+                className={`speed-button ${speedLevel === index ? 'active' : ''}`}
+                onClick={() => changeSpeed(index)}
+                disabled={gameStarted && !gameOver}
+                title={`${level.emoji} ${level.name}`}
+              >
+                {level.emoji}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       
@@ -176,11 +214,11 @@ const SnakeGame = () => {
           )}
         </div>
       </div>
-      
-      <div className="game-controls">
+        <div className="game-controls">
         <p>🎮 使用方向键控制蛇的移动</p>
         <p>🍎 吃掉红色食物得分</p>
         <p>⚠️ 不要撞墙或撞到自己</p>
+        <p>⚡ 点击表情符号调整游戏速度</p>
       </div>
     </div>
   );
