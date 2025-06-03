@@ -94,7 +94,7 @@ graph TB
             M[metadata.c - 元数据同步]
             N[client.c - 分布式通信客户端]
             O[cache.c - 本地缓存策略]
-            P[locks.c - 分布式锁管理]a
+            P[locks.c - 分布式锁管理]
             Q[xattr.c - 扩展属性]
             R1[consistency.c - 一致性保证]
             R2[recovery.c - 故障恢复]
