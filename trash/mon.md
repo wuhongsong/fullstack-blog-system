@@ -1,4 +1,4 @@
-# Ceph Monitor 架构深度分析报告
+# Monitor 架构深度分析报告
 
 ## 1. Monitor总体架构概览
 
